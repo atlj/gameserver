@@ -112,6 +112,7 @@ class Army(object):#dj army eheuheueheuehu
         self.general_name = general_name
         self.troops = []#bu listenin elemanlari asker objesi olucak.
         armies.append(self)
+        save()
         
     def calculate_dps(self):
         self.dps =0 #damage per second = saniye basina verilen hasar
@@ -212,6 +213,7 @@ class Camp(object):
         self.ords = Map.create()
     
         camps.append(self)
+        save()
     def getid(self):
         global idlist
         while 1:
@@ -297,6 +299,7 @@ class Player(object):
                        'MadenOcagi' : MadenOcagi(),
                        }
         players.append(self)
+        save()
         
     def getid(self):
         global idlist
