@@ -3,10 +3,10 @@ import models
 from mapping import *
 from threading import Thread
 from settings import *
-import socket, json
+import socket, json , time
 from log import log
-import time
 from parse import parser
+import generate
 
 __author__ = "easyly"
 
@@ -37,7 +37,19 @@ class GameServer(object):
     def newthread(self, count = 1):
         for times in range(count):
             Thread(target=self.accept).start()
-   
+
+    def cmd(self):
+        print "\ngenerate\tcmd\t"
+        while 1:
+            cmd = raw_input(">>")
+            if cmd == "generate":
+                generate.generate_map(50)
+            if cmd == "cmd":
+                try:
+                    inp = input("<<")
+                except Exception as e:
+                    print e
+
     def recver(self, c, addr):
         data = c.recv(1024**2)
         if not data:
@@ -48,7 +60,7 @@ class GameServer(object):
             return feedback
         except ValueError:
             self.log.write("veri islenemedi: "+str(feedback))
-            feedback = False
+            return False
   
     def accept(self):
             c, addr = self.sock.accept() # Getting connection
@@ -107,7 +119,26 @@ class GameServer(object):
                             "data":[feedbackdata]}
                 self.sender(feedback, c)
 
-    def loginandregister(self, c,addr):
+    def register(self, c, addr):
+        feedback = self.sender({"tag":"register_info", data:[]},c)
+        if not feedback:
+            return False
+        
+        while 1:
+            feedback = self.recver(c, addr)
+            if not feedback:
+                return False
+            name = feedback["data"][0]
+            if not name in models.fort_names:
+                models.fort_names.append(name)
+                models.save()
+                self.sender({"tag":"feedback", "data":[True]}, c)
+                return name
+            feedback = self.sender({"tag":"feedback", "data":[False, "name_taken"]}, c)
+            if not feedback:
+                return False
+
+    def loginandregister(self, c, addr):
       while 1:
       
         data = self.recver(c, addr)
@@ -128,7 +159,12 @@ class GameServer(object):
                 continue
 
             elif check == None:  ## Ilk giris
-                player = models.Player(usr_name)
+                register_info = self.register(c, addr)
+                
+                if register_info == False:
+                    return False
+
+                player = models.Player(usr_name, register_info)
                 db.update(player)
                 fb = self.sender({'tag':'feedback','data':[True]}, c)
                 if not fb:
@@ -168,6 +204,7 @@ def prepare_map():
 def initialize():
     prepare_map()
     server = GameServer()
+    Thread(target=server.cmd).start()
     server.bind()
 
 if __name__ == "__main__":

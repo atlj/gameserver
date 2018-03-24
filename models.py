@@ -11,6 +11,7 @@ cdir =  os.path.dirname(os.path.realpath(__file__))
 idlist = []
 camps = []
 armies = []
+fort_names = []
 players = []
 villages = []
 
@@ -20,7 +21,8 @@ def save():
     global armies
     global players
     global villages
-    savedata = {"camps":camps, "idlist":idlist, "armies":armies, "players":players, "villages":villages}
+    global fort_names
+    savedata = {"camps":camps, "idlist":idlist, "armies":armies, "players":players, "villages":villages, "fort_names":fort_names}
     with open(os.path.join(cdir, "serverdata"), "wb") as dosya:
         pickle.dump(savedata, dosya)
 
@@ -38,6 +40,7 @@ def load():
         armies = loaddata["armies"]
         players = loaddata["players"]
         villages = loaddata["villages"]
+        fort_names = loaddata["fort_names"]
 
 class Asker(object):
 
@@ -200,16 +203,16 @@ class MadenOcagi(hammadde):
     
 class Camp(object):
     #ords = Map.create()
-    def __init__(self, seviye):
+    def __init__(self,name ,seviye):
         self.getid()
+        self.name = name
         global camps
         self.seviye = seviye
+
         if seviye == 0:
             seviye = 1
         else:
             self.seviye = seviye
-        self.army = [ Asker() for i in range(30 * seviye) ]
-        
         self.ords = Map.create()
     
         camps.append(self)
@@ -223,13 +226,8 @@ class Camp(object):
             idlist.append(self.id)
             break
 
-    def save(self):
-        return cPickle.dumps(self)
-        
     def __str__(self):
-        return 'Camp: ' + str(self.seviye)
-
-
+        return "id: "+str(id)+"name: "+self.name+"ords: "+str(self.ords)
 
 class Kisla(object):
     def __init__(self):
@@ -286,9 +284,11 @@ class Merkez(object):
 
 class Player(object):
     player_list = []
-    def __init__(self,usr_name):
+    def __init__(self,usr_name,name):#burdaki name, sehrin ismi
         global players
+        global forts
         self.getid()
+        self.name = name
         self.usr_name = usr_name
         self.player_list.append(self)
         self.ords = Map.create()
@@ -300,7 +300,6 @@ class Player(object):
                        }
         players.append(self)
         save()
-        
     def getid(self):
         global idlist
         while 1:

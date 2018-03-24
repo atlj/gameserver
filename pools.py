@@ -5,10 +5,13 @@ import os
 info_ids = []
 cdir = os.path.dirname(os.path.realpath(__file__))
 
+
+__author__ = "atlj"
+
 class infopool(object):
     def __init__(self, name):
         self.name = name
-        self.picklename = name+"pickledata.pickle"
+        self.picklename = name+".pooldata"
         self.log = log.log(self.name+"pool")
         self.pool = {}
         self.deletedpool = []

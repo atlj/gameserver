@@ -1,5 +1,6 @@
 from __future__ import division#gercek anlamda kesirli bolme yapabilmek icin gereken kutuphane
 
+__author__ = "atlj"
 class Siege(object):#kusatma
     def __init__(self, attacker, defender):
         self.attacker = attacker

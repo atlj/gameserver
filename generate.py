@@ -1,8 +1,8 @@
 from database import *
 from models import Camp
+import random
 
-
-def generate_map(count, level):
+def generate_map(count):
     """
         Generete Word Method
         @param count: add Bot Camp
@@ -10,16 +10,12 @@ def generate_map(count, level):
     
     """
         
+
     print 'Generating Map...\nCamps: {}\n'.format(str(count))
+    global liste
     for i in range(count):
-        camp = Camp(random.randrange(level + 1))
+        camp = Camp(random.choice(liste.split(" ")), 12)
             
         print 'Id: ' + str(camp.id)
-        print 'Level  ' + str(camp)
-        print 'Army: ' + str(len(camp.army))
         print 'Location: ' + str(camp.ords)
         print '\n'
-        db = DBCamp()
-        db.connect()
-        db.insert(camp)
-        db.close()
