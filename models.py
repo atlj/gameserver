@@ -11,7 +11,7 @@ cdir =  os.path.dirname(os.path.realpath(__file__))
 idlist = []
 camps = []
 armies = []
-fort_names = []
+forts = []
 players = []
 villages = []
 
@@ -21,8 +21,8 @@ def save():
     global armies
     global players
     global villages
-    global fort_names
-    savedata = {"camps":camps, "idlist":idlist, "armies":armies, "players":players, "villages":villages, "fort_names":fort_names}
+    global forts
+    savedata = {"camps":camps, "idlist":idlist, "armies":armies, "players":players, "villages":villages, "forts":fort_names}
     with open(os.path.join(cdir, "serverdata"), "wb") as dosya:
         pickle.dump(savedata, dosya)
 
@@ -32,6 +32,7 @@ def load():
     global armies
     global players
     global villages
+    global forts
     if os.path.exists(os.path.join(cdir, "serverdata")):
         with open(os.path.join(cdir, "serverdata"), "rb") as dosya:
             loaddata = pickle.load(dosya)
@@ -40,7 +41,7 @@ def load():
         armies = loaddata["armies"]
         players = loaddata["players"]
         villages = loaddata["villages"]
-        fort_names = loaddata["fort_names"]
+        forts = loaddata["forts"]
 
 class Asker(object):
 
@@ -284,14 +285,13 @@ class Merkez(object):
 
 class Player(object):
     player_list = []
-    def __init__(self,usr_name,name):#burdaki name, sehrin ismi
+    def __init__(self,usr_name):
         global players
         global forts
+        self.name = "noname"#ilk olusturulusta
         self.getid()
-        self.name = name
         self.usr_name = usr_name
         self.player_list.append(self)
-        self.ords = Map.create()
         self.builds = {'Merkez': Merkez(),
                        'Kisla' : Kisla(),
                        'Oduncu': Oduncu(),
@@ -300,6 +300,12 @@ class Player(object):
                        }
         players.append(self)
         save()
+
+    def create_fort(self, name):
+        self.name = name
+        self.ords = Map.create()
+        forts.append(self)
+
     def getid(self):
         global idlist
         while 1:

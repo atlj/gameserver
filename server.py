@@ -96,7 +96,7 @@ class GameServer(object):
             tag = data["tag"]
             data = data["data"]
 
-            if data['tag'] == 'ping':
+            if tag == 'ping':
                 self.sender({'tag':'pong','data':[]},c)
             
             if tag == "sync":
@@ -120,7 +120,7 @@ class GameServer(object):
                 self.sender(feedback, c)
 
     def register(self, c, addr):
-        feedback = self.sender({"tag":"register_info", data:[]},c)
+        feedback = self.sender({"tag":"register_info", "data":[]},c)
         if not feedback:
             return False
         
@@ -153,18 +153,13 @@ class GameServer(object):
             check = db.login(usr_name, usr_pass)
             
             if check == False:
-                fb = self.sender({'tag':'feedback','data':[False , 'user_pass_err']}, c)
+                fb = self.sender({'tag':'feedback','data':[False]}, c)
                 if not fb:
                     return False
                 continue
 
             elif check == None:  ## Ilk giris
-                register_info = self.register(c, addr)
-                
-                if register_info == False:
-                    return False
-
-                player = models.Player(usr_name, register_info)
+                player = models.Player(usr_name)
                 db.update(player)
                 fb = self.sender({'tag':'feedback','data':[True]}, c)
                 if not fb:
@@ -183,6 +178,7 @@ class GameServer(object):
         elif data['tag'] == 'register':
             usr_name = data['data'][0]['user']
             usr_pass = data['data'][0]['pass']
+            db = DBConnector(usr_name)
             if usr_name in db.name_list:
                 fb = self.sender({'tag':'feedback', 'data':[False, 'usr_taken']}, c)
                 if not fb:
@@ -190,7 +186,6 @@ class GameServer(object):
                 continue
             
             else:
-                db = DBConnector(usr_name)
                 db.register(usr_name,usr_pass)
                 fb = self.sender({'tag':'feedback','data':[True]}, c)
                 if not fb:
