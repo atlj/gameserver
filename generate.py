@@ -1,7 +1,7 @@
 from database import *
 from models import Camp
 import random
-
+liste = ["yali", "merhaba", "test"]
 def generate_map(count):
     """
         Generete Word Method
@@ -14,7 +14,7 @@ def generate_map(count):
     print 'Generating Map...\nCamps: {}\n'.format(str(count))
     global liste
     for i in range(count):
-        camp = Camp(random.choice(liste.split(" ")), 12)
+        camp = Camp(random.choice(liste), 12)
             
         print 'Id: ' + str(camp.id)
         print 'Location: ' + str(camp.ords)

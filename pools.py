@@ -2,7 +2,6 @@ import random
 import log
 import cPickle as pickle
 import os
-info_ids = []
 cdir = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -15,14 +14,15 @@ class infopool(object):
         self.log = log.log(self.name+"pool")
         self.pool = {}
         self.deletedpool = []
+        self.info_ids = []
 
     def getid(self):
         global info_ids
         while 1:
             id = random.randint(1, 10**6)
-            if id in info_ids:
+            if id in self.info_ids:
                 continue
-            info_ids.append(id)
+            self.info_ids.append(id)
             return id
             
     def findbyid(self, data):
@@ -48,7 +48,7 @@ class infopool(object):
             self.pool[info_id]#Bu blok oncelikle verinin olup olmadigini kontrol etmek icin
             self.deletedpool.append(info_id)
             del self.pool[info_id]
-            del info_ids[info_ids.index(info_id)]
+            del self.info_ids[self.info_ids.index(info_id)]
         except KeyError:
             self.log.write("Veri, mevcut veritabaninda bulunmadigindan dolayi silinemedi: "+str(data))
             
@@ -58,7 +58,7 @@ class infopool(object):
 
         savedata = {"pool":self.pool,
                     "deletedpool":self.deletedpool,
-                    "info_ids":info_ids}
+                    "info_ids":self.info_ids}
         with open(os.path.join(cdir, self.picklename), "wb") as dosya:
             pickle.dump(savedata, dosya)
         
@@ -70,7 +70,7 @@ class infopool(object):
 
         self.pool = loaddata["pool"]
         self.deletedpool = loaddata["deletedpool"]
-        info_ids = loaddata["info_ids"]
+        self.info_ids = loaddata["info_ids"]
         
     def process(self, idlist):
         local_idlist = []
@@ -94,7 +94,8 @@ class infopool(object):
                     
         return feedback
                 
-        
+    def __str__(self):
+        return str(self.pool)
 class containerpool(infopool):
     def __init__(self, name):
         infopool.__init__(self, name)

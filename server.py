@@ -3,9 +3,10 @@ import models
 from mapping import *
 from threading import Thread
 from settings import *
-import socket, json , time
+import os, socket, json , time
 from log import log
 from parse import parser
+from pools import infopool
 import generate
 
 __author__ = "easyly"
@@ -39,18 +40,24 @@ class GameServer(object):
             Thread(target=self.accept).start()
 
     def cmd(self):
-        print "\ngenerate\tcmd\texit"
+        print "\nprint\twrite\tgenerate\tcmd\texit"
         while 1:
             cmd = raw_input(">>")
             if cmd == "generate":
-                generate.generate_map(50)
+                generate.generate_map(5)
             if cmd == "exit":
+                print "cikis yapiliyor.."
                 os._exit(0)
             if cmd == "cmd":
                 try:
-                    inp = input("<<")
+                    inp = input("cmdmode>>")
                 except Exception as e:
                     print e
+            if cmd == "print":
+                print input("print>>")
+
+            if cmd == "write":
+                self.log.write(input("write>>"))
 
     def recver(self, c, addr):
         data = c.recv(1024**2)
@@ -95,6 +102,7 @@ class GameServer(object):
     def listener(self, c, addr, obj):#anadongu
         while True:
             data = self.recver(c, addr)
+            self.log.write("gelen veri >> "+str(data))
             if data == False:
                 print str(addr[0])+" adresli kullanici sunucudan ayrildi"
                 break
@@ -105,6 +113,7 @@ class GameServer(object):
                     self.sender({"tag":"feedback", "data":[False]}, c)
                     cr = self.register(c, addr)
                     obj.name = cr
+                    models.forts[obj.id] = obj
                 else:
                     self.sender({"tag":"feedback", "data":[True]},c)
             if tag == 'ping':
@@ -201,11 +210,15 @@ class GameServer(object):
                 	
                 
 def prepare_map():
-    parser.parse_map(models.camps, models.players, models.armies)
+    return parser.parse_map(models.camps, models.forts,models.armies)
                        
 def initialize():
-    prepare_map()
     server = GameServer()
+    map_elements = prepare_map()
+    server.genericpool = infopool("genericpool")
+    for dic in map_elements:
+        for element in map_elements[dic]:
+            server.genericpool.add(element)
     Thread(target=server.cmd).start()
     server.bind()
 
