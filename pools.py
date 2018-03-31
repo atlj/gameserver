@@ -1,3 +1,4 @@
+#coding:utf-8
 import random
 import log
 import cPickle as pickle
@@ -77,6 +78,8 @@ class infopool(object):
         replacelist = []
         dellist = []
         
+        idlist = map(lambda x:int(x.encode("utf-8")), idlist)#python 2 ve 3 arasinda unicode ile alakali cozemedigim bir problem meydana geldiginden dolayi unicode decoded object seklinde gelen verileri encode edip once bir string objesine sonra da integer'a ceviriyorum map fonksiyonu ile kisalttim. 
+
         for id in self.deletedpool:
             if id in idlist:
                 dellist.append(id)

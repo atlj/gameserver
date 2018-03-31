@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from database import *
 import models
 from mapping import *
