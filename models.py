@@ -9,11 +9,12 @@ import cPickle as pickle
 cdir =  os.path.dirname(os.path.realpath(__file__))
 
 idlist = []
-camps = []
-armies = []
-forts = []
-players = []
-villages = []
+camps = {}
+armies = {}
+forts = {}
+players = {}
+villages = {}
+fort_names = []
 
 def save():
     global idlist
@@ -22,7 +23,8 @@ def save():
     global players
     global villages
     global forts
-    savedata = {"camps":camps, "idlist":idlist, "armies":armies, "players":players, "villages":villages, "forts":fort_names}
+    global fort_names
+    savedata = {"camps":camps, "idlist":idlist, "armies":armies, "players":players, "villages":villages, "forts":forts, "fort_names":fort_names}
     with open(os.path.join(cdir, "serverdata"), "wb") as dosya:
         pickle.dump(savedata, dosya)
 
@@ -33,6 +35,7 @@ def load():
     global players
     global villages
     global forts
+    global fort_names
     if os.path.exists(os.path.join(cdir, "serverdata")):
         with open(os.path.join(cdir, "serverdata"), "rb") as dosya:
             loaddata = pickle.load(dosya)
@@ -42,6 +45,8 @@ def load():
         players = loaddata["players"]
         villages = loaddata["villages"]
         forts = loaddata["forts"]
+        fort_names = loaddata["fort_names"]
+
 
 class Asker(object):
 
@@ -115,7 +120,7 @@ class Army(object):#dj army eheuheueheuehu
         self.name = name
         self.general_name = general_name
         self.troops = []#bu listenin elemanlari asker objesi olucak.
-        armies.append(self)
+        armies[self.id] = self
         save()
         
     def calculate_dps(self):
@@ -216,7 +221,7 @@ class Camp(object):
             self.seviye = seviye
         self.ords = Map.create()
     
-        camps.append(self)
+        camps[self.id] = self
         save()
     def getid(self):
         global idlist
@@ -298,13 +303,12 @@ class Player(object):
                        'KilOcagi' :KilOcagi(),
                        'MadenOcagi' : MadenOcagi(),
                        }
-        players.append(self)
+        players[self.id] = self
         save()
 
-    def create_fort(self, name):
-        self.name = name
+    def create_fort(self):
         self.ords = Map.create()
-        forts.append(self)
+        forts.append[self.id] = self
 
     def getid(self):
         global idlist

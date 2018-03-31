@@ -21,7 +21,7 @@ class GameServer(object):
     def bind(self):
         self.sock.bind(self.run)
         self.sock.listen(2)
-        print 'Sunucu Basladi!'
+        print "Sunucu Basladi!"
         self.newthread(5)
 
     def sender(self,context,c):
@@ -39,11 +39,13 @@ class GameServer(object):
             Thread(target=self.accept).start()
 
     def cmd(self):
-        print "\ngenerate\tcmd\t"
+        print "\ngenerate\tcmd\texit"
         while 1:
             cmd = raw_input(">>")
             if cmd == "generate":
                 generate.generate_map(50)
+            if cmd == "exit":
+                os._exit(0)
             if cmd == "cmd":
                 try:
                     inp = input("<<")
@@ -93,9 +95,18 @@ class GameServer(object):
     def listener(self, c, addr, obj):#anadongu
         while True:
             data = self.recver(c, addr)
+            if data == False:
+                print str(addr[0])+" adresli kullanici sunucudan ayrildi"
+                break
             tag = data["tag"]
             data = data["data"]
-
+            if tag == "user_control":
+                if obj.name == "noname":
+                    self.sender({"tag":"feedback", "data":[False]}, c)
+                    cr = self.register(c, addr)
+                    obj.name = cr
+                else:
+                    self.sender({"tag":"feedback", "data":[True]},c)
             if tag == 'ping':
                 self.sender({'tag':'pong','data':[]},c)
             
@@ -120,10 +131,6 @@ class GameServer(object):
                 self.sender(feedback, c)
 
     def register(self, c, addr):
-        feedback = self.sender({"tag":"register_info", "data":[]},c)
-        if not feedback:
-            return False
-        
         while 1:
             feedback = self.recver(c, addr)
             if not feedback:
