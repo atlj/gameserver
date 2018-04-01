@@ -132,6 +132,8 @@ class GameServer(object):
 
                 if "player" in data[0]:
                     selfpool = self.player_container.bring(obj.id)
+                    if not selfpool:
+                        self.log.write("oyuncu havuzu containerdan yuklenemedi\noyuncu id'si >> "+ str(obj.id)+"\nhavuz idleri >> "+str(self.player_container))
                     parsed = parser.parse_player(obj, models.armies)
                     selfpool.replace(parsed["materials"])
                     for army in parsed["armies"]:
