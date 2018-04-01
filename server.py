@@ -46,6 +46,10 @@ class GameServer(object):
             cmd = raw_input(">>")
             if cmd == "generate":
                 generate.generate_map(5)
+                parsed_info = parser.parse_map(models.camps, models.forts,models.armies)
+                for element in parsed_info:
+                    for info in parsed_info[element]:
+                        self.genericpool.add(info)
             if cmd == "exit":
                 print "cikis yapiliyor.."
                 os._exit(0)
@@ -127,9 +131,11 @@ class GameServer(object):
                     feedbackdata["generic"] = genericpool_feedback
 
                 if "player" in data[0]:
-                    self.log.write(str(self.player_container))
-                    self.log.write(str(obj.id))
                     selfpool = self.player_container.bring(obj.id)
+                    parsed = parser.parse_player(obj, models.armies)
+                    selfpool.replace(parsed["materials"])
+                    for army in parsed["armies"]:
+                        selfpool.replace(army)
                     playerpool_feedback = selfpool.process(data[1]["player_idlist"])
                     feedbackdata["player"]= playerpool_feedback
 
@@ -211,7 +217,12 @@ class GameServer(object):
                     return False
                 continue
                 	
-                
+    def parseall(self):#su anlik kullanilmiyor.
+        parsed_datas = parser.parse_map(models.camps, models.forts,models.armies)
+        for element in parsed_datas:
+            for data in parsed_datas[element]:
+                self.genericpool.add(data)
+
 def prepare_map():
     return parser.parse_map(models.camps, models.forts,models.armies)
                        
