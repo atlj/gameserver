@@ -102,6 +102,9 @@ class infopool(object):
 class containerpool(infopool):
     def __init__(self, name):
         infopool.__init__(self, name)
+
+    def register(self, obj_id, obj):
+        self.pool[obj_id] = obj
         
     def bring(self, obj_id):
         idpool = []

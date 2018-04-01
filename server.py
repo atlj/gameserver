@@ -7,7 +7,7 @@ from settings import *
 import os, socket, json , time
 from log import log
 from parse import parser
-from pools import infopool
+from pools import infopool, containerpool
 import generate
 
 __author__ = "easyly"
@@ -127,7 +127,9 @@ class GameServer(object):
                     feedbackdata["generic"] = genericpool_feedback
 
                 if "player" in data[0]:
-                    selfpool = self.playerpool.bring(obj.id)
+                    self.log.write(str(self.player_container))
+                    self.log.write(str(obj.id))
+                    selfpool = self.player_container.bring(obj.id)
                     playerpool_feedback = selfpool.process(data[1]["player_idlist"])
                     feedbackdata["player"]= playerpool_feedback
 
@@ -217,9 +219,14 @@ def initialize():
     server = GameServer()
     map_elements = prepare_map()
     server.genericpool = infopool("genericpool")
+    server.player_container = containerpool("playercontainer") 
     for dic in map_elements:
         for element in map_elements[dic]:
             server.genericpool.add(element)
+    for id  in models.players:
+        pool = infopool("playerpool "+ str(id))
+        server.player_container.register(id, pool)
+    
     Thread(target=server.cmd).start()
     server.bind()
 
