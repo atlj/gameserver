@@ -134,10 +134,13 @@ class GameServer(object):
                     selfpool = self.player_container.bring(obj.id)
                     if not selfpool:
                         self.log.write("oyuncu havuzu containerdan yuklenemedi\noyuncu id'si >> "+ str(obj.id)+"\nhavuz idleri >> "+str(self.player_container))
+                    #BURAYI SIL
                     parsed = parser.parse_player(obj, models.armies)
                     selfpool.replace(parsed["materials"])
                     for army in parsed["armies"]:
                         selfpool.replace(army)
+                    self.player_container.register(obj.id, selfpool)
+                    #BURAYI SIL
                     playerpool_feedback = selfpool.process(data[1]["player_idlist"])
                     feedbackdata["player"]= playerpool_feedback
 
@@ -239,7 +242,6 @@ def initialize():
     for id  in models.players:
         pool = infopool("playerpool "+ str(id))
         server.player_container.register(id, pool)
-    
     Thread(target=server.cmd).start()
     server.bind()
 

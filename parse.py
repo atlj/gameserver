@@ -27,6 +27,8 @@ class parser(object):
         materials["Odun"] = buildings["Oduncu"].suan
         materials["Demir"] = buildings["MadenOcagi"].suan
         materials["Kil"] = buildings["KilOcagi"].suan
+
+        return {"armies":parsed_armies, "materials":materials}
         
     @staticmethod
     def parse_map(camps=[], forts =[], armies=[], villages= []):#villages tbe
