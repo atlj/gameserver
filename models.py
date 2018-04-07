@@ -326,7 +326,10 @@ class Player(object):
         
     
     def __str__(self):
-        string = "ID: {}\nUser Name: {}".format(str(self.id),str(self.usr_name))
+        wood = self.builds["Oduncu"].suan
+        iron = self.builds["MadenOcagi"].suan
+        clay = self.builds["KilOcagi"].suan
+        string = "ID: {}\nUser Name: {}\niron: {} clay: {} wood: {}".format(str(self.id),str(self.usr_name), str(iron), str(clay), str(wood))
         return string
 
 load()

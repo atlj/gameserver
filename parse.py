@@ -24,9 +24,9 @@ class parser(object):
             parsed_armies.append(package)
 
         buildings = player.builds
-        materials["Odun"] = buildings["Oduncu"].suan
-        materials["Demir"] = buildings["MadenOcagi"].suan
-        materials["Kil"] = buildings["KilOcagi"].suan
+        materials["wood"] = buildings["Oduncu"].suan
+        materials["iron"] = buildings["MadenOcagi"].suan
+        materials["clay"] = buildings["KilOcagi"].suan
 
         return {"armies":parsed_armies, "materials":materials}
         

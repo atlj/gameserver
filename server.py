@@ -41,7 +41,7 @@ class GameServer(object):
             Thread(target=self.accept).start()
 
     def cmd(self):
-        print "\nprint\twrite\tgenerate\tcmd\texit"
+        print "\nprint\twrite\tgenerate\tcmd\texit\tplayers"
         while 1:
             cmd = raw_input(">>")
             if cmd == "generate":
@@ -53,6 +53,10 @@ class GameServer(object):
             if cmd == "exit":
                 print "cikis yapiliyor.."
                 os._exit(0)
+            
+            if cmd == "players":
+                for player in models.players:
+                    print models.players[player]
             if cmd == "cmd":
                 try:
                     inp = input("cmdmode>>")

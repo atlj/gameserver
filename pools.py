@@ -52,8 +52,12 @@ class infopool(object):
             del self.info_ids[self.info_ids.index(info_id)]
         except KeyError:
             self.log.write("Veri, mevcut veritabaninda bulunmadigindan dolayi silinemedi: "+str(data))
-            
-        
+    
+    def print_pool(self):
+        for id in self.pool:
+            print self.pool[id]
+    def __getitem__(self, index):
+        return self.pool[index]
     def save(self):#cpickle object dondurecek
         global info_ids
 
