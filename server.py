@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 from database import *
 import models
 from mapping import *
@@ -77,7 +77,7 @@ class GameServer(object):
             feedback = json.loads(data)
             return feedback
         except ValueError:
-            self.log.write("veri islenemedi: "+str(feedback))
+            self.log.write("veri islenemedi: "+str(data))
             return False
   
     def accept(self):
