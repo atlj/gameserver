@@ -309,7 +309,7 @@ class Player(object):
 
     def create_fort(self):
         self.ords = Map.create()
-        forts.append[self.id] = self
+        forts[self.id] = self
 
     def getid(self):
         global idlist

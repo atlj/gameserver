@@ -122,7 +122,10 @@ class GameServer(object):
                     self.sender({"tag":"feedback", "data":[False]}, c)
                     cr = self.register(c, addr)
                     obj.name = cr
+                    obj.create_fort()
                     models.forts[obj.id] = obj
+                    models.players[obj.id] = obj
+                    models.save()
                 else:
                     self.sender({"tag":"feedback", "data":[True]},c)
             if tag == 'ping':
