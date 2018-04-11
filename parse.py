@@ -1,4 +1,6 @@
 __author__ = "atlj"
+from log import log
+log = log("PARSER LOG")
 class parser(object):
 
     @staticmethod
@@ -24,9 +26,10 @@ class parser(object):
             parsed_armies.append(package)
 
         buildings = player.builds
-        materials["wood"] = buildings["Oduncu"].suan
-        materials["iron"] = buildings["MadenOcagi"].suan
-        materials["clay"] = buildings["KilOcagi"].suan
+        log.write("OYUNCU >>"+str(player))
+        materials["Odun"] = buildings["Oduncu"].suan
+        materials["Demir"] = buildings["MadenOcagi"].suan
+        materials["Kil"] = buildings["KilOcagi"].suan
 
         return {"armies":parsed_armies, "materials":materials}
         

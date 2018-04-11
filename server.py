@@ -139,6 +139,7 @@ class GameServer(object):
                     if not selfpool:
                         self.log.write("oyuncu havuzu containerdan yuklenemedi\noyuncu id'si >> "+ str(obj.id)+"\nhavuz idleri >> "+str(self.player_container))
                     #BURAYI SIL
+                    self.log.write("oyuncu >> "+str(obj))
                     parsed = parser.parse_player(obj, models.armies)
                     selfpool.replace(parsed["materials"])
                     for army in parsed["armies"]:
@@ -203,6 +204,7 @@ class GameServer(object):
             
             else:    #Login
                 player = db.login(usr_name, usr_pass)
+                player = models.players[player.id]
                 fb = self.sender({'tag':'feedback', 'data':[True]}, c)
                 if not fb:
                     return False
