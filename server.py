@@ -91,9 +91,14 @@ class GameServer(object):
                 return 0#sunucudan ayrilan kullaniciyi atmak icin.
             self.listener(c, addr, player)#anadongu
 
-    def offline_earn(self, c, obj):
+    def saver(self, obj):
+        while 1:
+            models.players[obj.id]= obj
+            models.save()
+            time.sleep(5)
+    
+    def offline_earn(self, obj):
         
-        db = DBConnector(obj.usr_name)
         oduncu = obj.builds['Oduncu']
         kil = obj.builds['KilOcagi']
         maden = obj.builds['MadenOcagi']
@@ -101,13 +106,8 @@ class GameServer(object):
         Thread(target = oduncu.uret, args = ()).start()
         Thread(target = kil.uret, args = ()).start()
         Thread(target = maden.uret, args = ()).start()
-        
-        while True:
-            db.update(obj)
-            time.sleep(.1)#database disk yiyeceginden dolayi timeout koymak daha mantikli
-    
-    
-        
+        Thread(target = self.saver, args = (obj, )).start()
+
     def listener(self, c, addr, obj):#anadongu
         while True:
             data = self.recver(c, addr)
@@ -142,7 +142,6 @@ class GameServer(object):
                     if not selfpool:
                         self.log.write("oyuncu havuzu containerdan yuklenemedi\noyuncu id'si >> "+ str(obj.id)+"\nhavuz idleri >> "+str(self.player_container))
                     #BURAYI SIL
-                    self.log.write("oyuncu >> "+str(obj))
                     parsed = parser.parse_player(obj, models.armies)
                     selfpool.replace(parsed["materials"])
                     for army in parsed["armies"]:
@@ -199,10 +198,10 @@ class GameServer(object):
             elif check == None:  ## Ilk giris
                 player = models.Player(usr_name)
                 db.update(player)
+                self.offline_earn(player)
                 fb = self.sender({'tag':'feedback','data':[True]}, c)
                 if not fb:
                     return False
-                Thread(target = self.offline_earn, args = (c,  player)).start()
                 return player
             
             else:    #Login
@@ -211,7 +210,6 @@ class GameServer(object):
                 fb = self.sender({'tag':'feedback', 'data':[True]}, c)
                 if not fb:
                     return False
-                Thread(target = self.offline_earn, args = (c, player)).start()
                 return player
 
         elif data['tag'] == 'register':
@@ -250,6 +248,7 @@ def initialize():
             server.genericpool.add(element)
     for id  in models.players:
         pool = infopool("playerpool "+ str(id))
+        server.offline_earn(models.players[id])
         server.player_container.register(id, pool)
     Thread(target=server.cmd).start()
     server.bind()

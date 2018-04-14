@@ -22,15 +22,14 @@ class parser(object):
 
         parsed_armies = []
         for army in self_armies:
-            package = {"name":army.name, "general_name":army.general_name,"x":army.ords[0], "y":army.ords[1], "troops":parser.parse_troops(army.troops) }
+            package = {"id":army.id, "name":army.name, "general_name":army.general_name,"x":army.ords[0], "y":army.ords[1], "troops":parser.parse_troops(army.troops) }
             parsed_armies.append(package)
 
         buildings = player.builds
-        log.write("OYUNCU >>"+str(player))
         materials["Odun"] = buildings["Oduncu"].suan
         materials["Demir"] = buildings["MadenOcagi"].suan
         materials["Kil"] = buildings["KilOcagi"].suan
-
+        materials["id"] = player.id
         return {"armies":parsed_armies, "materials":materials}
         
     @staticmethod
