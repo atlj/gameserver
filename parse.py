@@ -22,7 +22,10 @@ class parser(object):
 
         parsed_armies = []
         for army in self_armies:
-            package = {"id":army.id, "name":army.name, "general_name":army.general_name,"x":army.ords[0], "y":army.ords[1], "troops":parser.parse_troops(army.troops) }
+            total_size = 0
+            for troop in army.troops:
+                total_size += army.size
+            package = {"total_size":total_size,"id":army.id, "name":army.name, "general_name":army.general_name,"x":army.ords[0], "y":army.ords[1], "troops":parser.parse_troops(army.troops) }
             parsed_armies.append(package)
 
         buildings = player.builds

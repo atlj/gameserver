@@ -15,6 +15,7 @@ forts = {}
 players = {}
 villages = {}
 fort_names = []
+prices = {"army_price":{"Odun": 100, "Demir": 100, "Kil": 100}}
 
 def save():
     global idlist
