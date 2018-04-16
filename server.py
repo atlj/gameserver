@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+#1-*- coding: utf-8 -*-
 from database import *
 import models
 from mapping import *
@@ -41,7 +41,7 @@ class GameServer(object):
             Thread(target=self.accept).start()
 
     def cmd(self):
-        print "\nprint\twrite\tgenerate\tcmd\texit\tplayers"
+        print "print\twrite\tgenerate\tcmd\texit\tplayers\tarmies"
         while 1:
             cmd = raw_input(">>")
             if cmd == "generate":
@@ -53,10 +53,14 @@ class GameServer(object):
             if cmd == "exit":
                 print "cikis yapiliyor.."
                 os._exit(0)
+
+            if cmd == "armies":
+                for army in models.armies:
+                    print "\n" + str(models.armies[army])
             
             if cmd == "players":
                 for player in models.players:
-                    print models.players[player]
+                    print "\n"+str(models.players[player])
             if cmd == "cmd":
                 try:
                     inp = input("cmdmode>>")
@@ -123,12 +127,19 @@ class GameServer(object):
                 kil = builds["KilOcagi"].suan
                 odun = builds["Oduncu"].suan
                 ucret = models.prices["army_price"]
+                for army in models.armies:
+                    if army in obj.armies:
+                        if models.armies[army].name == data[0]:
+                            self.sender({"tag":"create_army_feedback", "data":[False, "err_name"]}, c)
+                            continue
 
                 if odun >= ucret["Odun"] and kil >= ucret["Kil"] and demir >= ucret["Demir"]:
                     self.sender({"tag":"create_army_feedback", "data":[True]}, c)
+                    data = [data[0].encode("utf-8"), data[1].encode("utf-8")]
                     newarmy = models.Army(data[0], data[1], obj.id, obj.usr_name)
                     models.armies[newarmy.id] = newarmy
                     models.players[obj.id].armies.append(newarmy.id)
+                    obj = models.players[obj.id]
                     models.save()
                     self.log.write("Yeni Ordu Olusturuldu: "+str(newarmy))
                 else:
@@ -262,12 +273,13 @@ def initialize():
     for dic in map_elements:
         for element in map_elements[dic]:
             server.genericpool.add(element)
+    server.genericpool.add({"id":-1, "datatype":"prices", "data":models.prices})
     for id  in models.players:
         pool = infopool("playerpool "+ str(id))
         server.offline_earn(models.players[id])
         server.player_container.register(id, pool)
-    Thread(target=server.cmd).start()
     server.bind()
+    Thread(target=server.cmd).start()
 
 if __name__ == "__main__":
     initialize()
