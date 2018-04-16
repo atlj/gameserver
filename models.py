@@ -15,7 +15,7 @@ forts = {}
 players = {}
 villages = {}
 fort_names = []
-prices = {"army_price":{"Odun": 100, "Demir": 100, "Kil": 100}}
+prices = {"army_price":{"Odun": 1, "Demir": 1, "Kil": 1}}
 
 def save():
     global idlist
@@ -123,6 +123,9 @@ class Army(object):#dj army eheuheueheuehu
         self.troops = []#bu listenin elemanlari asker objesi olucak.
         armies[self.id] = self
         save()
+
+    def __str__(self):
+        return "Ordu Objesi\nId:{} Isim:{}\nGeneral Ismi:{} Sahip:{}".format(str(self.id), self.name, self.general_name, self.belonger_name)
         
     def calculate_dps(self):
         self.dps =0 #damage per second = saniye basina verilen hasar

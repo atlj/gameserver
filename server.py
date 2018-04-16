@@ -117,6 +117,22 @@ class GameServer(object):
                 break
             tag = data["tag"]
             data = data["data"]
+            if tag == "create_army":
+                builds = obj.builds
+                demir = builds["MadenOcagi"].suan
+                kil = builds["KilOcagi"].suan
+                odun = builds["Oduncu"].suan
+                ucret = models.prices["army_price"]
+
+                if odun >= ucret["Odun"] and kil >= ucret["Kil"] and demir >= ucret["Demir"]:
+                    self.sender({"tag":"create_army_feedback", "data":[True]}, c)
+                    newarmy = models.Army(data[0], data[1], obj.id, obj.usr_name)
+                    models.armies[newarmy.id] = newarmy
+                    models.players[obj.id].armies.append(newarmy.id)
+                    models.save()
+                    self.log.write("Yeni Ordu Olusturuldu: "+str(newarmy))
+                else:
+                    self.sender({"tag":"create_army_feedback","data":[False, "err_materials"]}, c)
             if tag == "user_control":
                 if obj.name == "noname":
                     self.sender({"tag":"feedback", "data":[False]}, c)
