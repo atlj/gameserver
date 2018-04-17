@@ -69,13 +69,15 @@ class infopool(object):
         
     def load(self):#cpickle object alicak
         global info_ids
+        try:
+            with open(os.path.join(cdir, self.picklename), "rb") as dosya:
+                loaddata = pickle.load(dosya)
 
-        with open(os.path.join(cdir, self.picklename), "rb") as dosya:
-            loaddata = pickle.load(dosya)
-
-        self.pool = loaddata["pool"]
-        self.deletedpool = loaddata["deletedpool"]
-        self.info_ids = loaddata["info_ids"]
+            self.pool = loaddata["pool"]
+            self.deletedpool = loaddata["deletedpool"]
+            self.info_ids = loaddata["info_ids"]
+        except IOError:
+            pass
         
     def process(self, idlist):
         local_idlist = []

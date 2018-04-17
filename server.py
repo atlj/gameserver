@@ -20,12 +20,12 @@ class GameServer(object):
         self.run = (HOST, PORT)
         self.log = log("SERVER")
         
-    def bind(self):
+    def bind(self, threadcount):
         self.sock.bind(self.run)
         self.sock.listen(2)
         print "\n\t------------------\n\tSOCKET GAME SERVER\n\t" + "-"*18
         print "\nSunucu Basladi!\n"
-        self.newthread(5)
+        self.newthread(threadcount)
 
     def sender(self,context,c):
         try:
@@ -42,7 +42,7 @@ class GameServer(object):
             Thread(target=self.accept).start()
 
     def cmd(self):
-        komutlar = ["write","generate","cmd","exit","players","armies"]
+        komutlar = ["write","generate","cmd","exit","players","armies", "print"]
         spacecount = 30
         text = ""
         for com in komutlar:
@@ -84,7 +84,10 @@ class GameServer(object):
                 except Exception as e:
                     print e
             if cmd == "print":
-                print input("print>>")
+                try:
+                    print input("print>>")
+                except NameError as e:
+                    print e
 
             if cmd == "write":
                 self.log.write(input("write>>"))
@@ -139,6 +142,7 @@ class GameServer(object):
             tag = data["tag"]
             data = data["data"]
             if tag == "create_army":
+                pass_switch = False
                 builds = obj.builds
                 demir = builds["MadenOcagi"].suan
                 kil = builds["KilOcagi"].suan
@@ -148,12 +152,16 @@ class GameServer(object):
                     if army in obj.armies:
                         if models.armies[army].name == data[0]:
                             self.sender({"tag":"create_army_feedback", "data":[False, "err_name"]}, c)
-                            continue
+                            pass_switch = True
+
+                if pass_switch:
+                    continue
 
                 if odun >= ucret["Odun"] and kil >= ucret["Kil"] and demir >= ucret["Demir"]:
                     self.sender({"tag":"create_army_feedback", "data":[True]}, c)
-                    data = [data[0].encode("utf-8"), data[1].encode("utf-8")]
-                    newarmy = models.Army(data[0], data[1], obj.id, obj.usr_name)
+                    army_name = data[0].encode("utf-8")
+                    general_name = data[1].encode("utf-8")
+                    newarmy = models.Army(army_name, general_name, obj.id, obj.usr_name)
                     models.armies[newarmy.id] = newarmy
                     models.players[obj.id].armies.append(newarmy.id)
                     obj = models.players[obj.id]
@@ -278,6 +286,16 @@ class GameServer(object):
             for data in parsed_datas[element]:
                 self.genericpool.add(data)
 
+    def action_trigger_chainer(self,pool):#ATC, her aksiyonun bir triggeri oldugundan emin olunmasini saglar.Her sunucu baslangicinda cagirilmasi gerekir
+        for action_id in pool.pool:
+            if pool.pool[action_id]["type"] == "move_army":
+                if not pool.pool[action_id]["has_trigger"]:
+                    pass #move_army trigger
+
+            if pool.pool[action_id]["type"] == "create_troop":
+                if not pool.pool[action_id]["has_trigger"]:
+                    pass #create_troop trigger
+
 def prepare_map():
     return parser.parse_map(models.camps, models.forts,models.armies)
                        
@@ -285,7 +303,11 @@ def initialize():
     server = GameServer()
     map_elements = prepare_map()
     server.genericpool = infopool("genericpool")
-    server.player_container = containerpool("playercontainer") 
+    server.player_container = containerpool("playercontainer")
+    server.actionpool = infopool("actionpool")
+    server.actionpool.load()
+    server.action_trigger_chainer(server.actionpool)
+
     for dic in map_elements:
         for element in map_elements[dic]:
             server.genericpool.add(element)
@@ -294,7 +316,7 @@ def initialize():
         pool = infopool("playerpool "+ str(id))
         server.offline_earn(models.players[id])
         server.player_container.register(id, pool)
-    server.bind()
+    server.bind(5)
     Thread(target=server.cmd).start()
 
 if __name__ == "__main__":

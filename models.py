@@ -7,7 +7,6 @@ import os
 import cPickle as pickle
 
 cdir =  os.path.dirname(os.path.realpath(__file__))
-
 idlist = []
 camps = {}
 armies = {}
@@ -15,7 +14,12 @@ forts = {}
 players = {}
 villages = {}
 fort_names = []
-prices = {"army_price":{"Odun": 1, "Demir": 1, "Kil": 1}}
+prices = {"troop_price":
+    {"yaya_asker":{"Demir":100, "Odun":200, "Kil":100}, 
+    "zirhli_asker":{"Demir":100, "Odun":200, "Kil":100},
+    "atli_asker":{"Demir":100, "Odun":200, "Kil":100}, 
+    "kusatma_makinesi":{"Demir":100, "Odun":200, "Kil":100} },
+    "army_price":{"Odun": 1, "Demir": 1, "Kil": 1}}
 
 def save():
     global idlist
