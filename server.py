@@ -23,7 +23,8 @@ class GameServer(object):
     def bind(self):
         self.sock.bind(self.run)
         self.sock.listen(2)
-        print "Sunucu Basladi!"
+        print "\n\t------------------\n\tSOCKET GAME SERVER\n\t" + "-"*18
+        print "\nSunucu Basladi!\n"
         self.newthread(5)
 
     def sender(self,context,c):
@@ -41,7 +42,20 @@ class GameServer(object):
             Thread(target=self.accept).start()
 
     def cmd(self):
-        print "print\twrite\tgenerate\tcmd\texit\tplayers\tarmies"
+        komutlar = ["write","generate","cmd","exit","players","armies"]
+        spacecount = 30
+        text = ""
+        for com in komutlar:
+            if komutlar.index(com) % 2 == 0:
+                text += com
+                textlen = len(com)
+                if komutlar.index(com) +1 == len(komutlar):
+                    text += "\n"
+            else:
+                count = spacecount -textlen
+                textlen = 0
+                text += " "*count + com+"\n"
+        print text
         while 1:
             cmd = raw_input(">>")
             if cmd == "generate":
@@ -57,10 +71,13 @@ class GameServer(object):
             if cmd == "armies":
                 for army in models.armies:
                     print "\n" + str(models.armies[army])
+                print "\n"
             
             if cmd == "players":
                 for player in models.players:
                     print "\n"+str(models.players[player])
+                print "\n"
+
             if cmd == "cmd":
                 try:
                     inp = input("cmdmode>>")
@@ -141,7 +158,6 @@ class GameServer(object):
                     models.players[obj.id].armies.append(newarmy.id)
                     obj = models.players[obj.id]
                     models.save()
-                    self.log.write("Yeni Ordu Olusturuldu: "+str(newarmy))
                 else:
                     self.sender({"tag":"create_army_feedback","data":[False, "err_materials"]}, c)
             if tag == "user_control":
