@@ -141,6 +141,8 @@ class GameServer(object):
                 break
             tag = data["tag"]
             data = data["data"]
+            if tag == "move_army":
+                pass #TODO
             if tag == "create_army":
                 pass_switch = False
                 builds = obj.builds
@@ -162,6 +164,7 @@ class GameServer(object):
                     army_name = data[0].encode("utf-8")
                     general_name = data[1].encode("utf-8")
                     newarmy = models.Army(army_name, general_name, obj.id, obj.usr_name)
+                    newarmy.ords = obj.ords
                     models.armies[newarmy.id] = newarmy
                     models.players[obj.id].armies.append(newarmy.id)
                     obj = models.players[obj.id]
