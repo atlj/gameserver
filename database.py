@@ -1,6 +1,6 @@
 from settings import *
 import sqlite3 as sql
-from models import *
+from models import Player
 import os, random, cPickle
 from threading import Thread
 

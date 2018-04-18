@@ -19,6 +19,7 @@ class GameServer(object):
     def __init__(self):
         self.run = (HOST, PORT)
         self.log = log("SERVER")
+        self.socketqueue = []
         
     def bind(self, threadcount):
         self.sock.bind(self.run)
@@ -93,16 +94,23 @@ class GameServer(object):
                 self.log.write(input("write>>"))
 
     def recver(self, c, addr):
-        data = c.recv(1024**2)
-        if not data:
-            print "kullanici Baglantiyi kesti: "+str(addr[0])
-            return False
-        try:
-            feedback = json.loads(data)
-            return feedback
-        except ValueError:
-            self.log.write("veri islenemedi: "+str(data))
-            return False
+        if self.socketqueue == [""]:
+            self.socketqueue = []
+        if self.socketqueue == []:
+            data = c.recv(1024**2)
+            if not data:
+                print "kullanici Baglantiyi kesti: "+str(addr[0])
+                return False
+
+            if not "\\n" in data:
+                parsed = data.split("\n")
+
+            for element in parsed:
+                self.socketqueue.append(element)
+
+        toreturn = self.socketqueue.pop(0)
+        self.log.write("Decodelanacak veri: {}".format(toreturn))
+        return json.loads(toreturn)
   
     def accept(self):
             c, addr = self.sock.accept() # Getting connection
