@@ -47,6 +47,8 @@ def load():
         idlist = loaddata["idlist"]
         camps = loaddata["camps"]
         armies = loaddata["armies"]
+        for id in armies:
+            armies[id].hasaction = False
         players = loaddata["players"]
         villages = loaddata["villages"]
         forts = loaddata["forts"]
@@ -122,6 +124,7 @@ class Army(object):#dj army eheuheueheuehu
         self.belonger_name = belonger_name
         self.ords = [0, 0]
         self.isshown = False
+        self.hasaction = False
         self.name = name
         self.general_name = general_name
         self.troops = []#bu listenin elemanlari asker objesi olucak.
@@ -152,6 +155,13 @@ class Army(object):#dj army eheuheueheuehu
             self.hp += troop.size*troop.stats["health"]
 
         return self.hp
+
+    def calculate_move_time(self):
+        move_time = 0
+        for troop in self.troops:
+            move_time += troop.size*troop.stats["movement_time"]
+        return move_time
+
 
     def add(self,troop):
         self.troops.append(troop)

@@ -18,7 +18,6 @@ class infopool(object):
         self.info_ids = []
 
     def getid(self):
-        global info_ids
         while 1:
             id = random.randint(1, 10**6)
             if id in self.info_ids:
@@ -41,6 +40,14 @@ class infopool(object):
         if old_id:
             del self.pool[old_id]
         self.add(data)
+
+    def remove_by_id(self, id):
+        try:
+            del self.pool[id]
+            self.info_ids.remove(id)
+        except KeyError:
+            self.log.write("Havuzda {} Numarali Id Bulunamadigi İcin remove_by_id gerceklestirilemedi".format(str(id)))
+            
         
     def remove(self, data):
         info_id = self.findbyid(data)

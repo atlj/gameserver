@@ -123,22 +123,16 @@ class GameServer(object):
                 return 0#sunucudan ayrilan kullaniciyi atmak icin.
             self.listener(c, addr, player)#anadongu
 
-    def saver(self, obj):
+    def saver(self):
         while 1:
-            models.players[obj.id]= obj
             models.save()
             time.sleep(5)
     
     def offline_earn(self, obj):
         
-        oduncu = obj.builds['Oduncu']
-        kil = obj.builds['KilOcagi']
-        maden = obj.builds['MadenOcagi']
-        
-        Thread(target = oduncu.uret, args = ()).start()
-        Thread(target = kil.uret, args = ()).start()
-        Thread(target = maden.uret, args = ()).start()
-        Thread(target = self.saver, args = (obj, )).start()
+        Thread(target = models.players[obj.id].builds['Oduncu'].uret, args = ()).start()
+        Thread(target = models.players[obj.id].builds['KilOcagi'].uret, args = ()).start()
+        Thread(target = models.players[obj.id].builds['MadenOcagi'].uret, args = ()).start()
 
     def listener(self, c, addr, obj):#anadongu
         while True:
@@ -149,8 +143,17 @@ class GameServer(object):
                 break
             tag = data["tag"]
             data = data["data"]
-            if tag == "move_army":
-                pass #TODO
+            if tag == "action":
+                try:
+                    data[0]["id"] = self.actionpool.getid()
+                    data[0]["from"] = obj.id
+                    data[0]["has_trigger"] = False
+                except TypeError:
+                    self.log.write("Gecersiz Action Tanimlama : {}".format(str(data[0])))
+                    continue
+                self.actionpool.add(data[0])#devam
+                self.actionpool.save()
+                self.action_trigger_chainer(self.actionpool)
             if tag == "create_army":
                 pass_switch = False
                 builds = obj.builds
@@ -158,6 +161,7 @@ class GameServer(object):
                 kil = builds["KilOcagi"].suan
                 odun = builds["Oduncu"].suan
                 ucret = models.prices["army_price"]
+                pass_switch = False
                 for army in models.armies:
                     if army in obj.armies:
                         if models.armies[army].name == data[0]:
@@ -174,7 +178,7 @@ class GameServer(object):
                     newarmy = models.Army(army_name, general_name, obj.id, obj.usr_name)
                     newarmy.ords = obj.ords
                     models.armies[newarmy.id] = newarmy
-                    models.players[obj.id].armies.append(newarmy.id)
+                    models.players[obj.id].armies.append(newarmy.id) 
                     obj = models.players[obj.id]
                     models.save()
                 else:
@@ -297,14 +301,89 @@ class GameServer(object):
             for data in parsed_datas[element]:
                 self.genericpool.add(data)
 
+
+
+    def move_army_trigger(self, poolid):
+        action = self.actionpool[poolid]
+        try:
+            army = models.armies[action["army_id"]]
+        except KeyError:
+            self.actionpool.log.write("{} numarali ordu id si bulunamadigi icin {} id li action calistirilamadi ve havuzdan eksiltildi".format(str(action["army_id"]), str(action["id"])))
+            self.actionpool.remove_by_id(poolid)
+            self.actionpool.save()
+            return 0
+        if army.hasaction:
+            self.actionpool.log.write("{} idli ordu zaten bir aksiyon icerisinde oldugundan dolayi {} id li aksiyon havuzdan eksiltildi".format(str(action["army_id"]), str(action["id"])))
+            self.actionpool.remove_by_id(poolid)
+            self.actionpool.save()
+            return 0
+        if action["x"] <=0 or action["y"] <= 0:
+            self.actionpool.remove_by_id(poolid)
+            self.actionpool.save()
+            self.actionpool.log.write("{} idli actionun x veya y degerleri 0 a kucukesit oldugu icin aksiyon silindi aksiyon: {}".format(str(poolid), str(action)))
+            return 0
+        x_count = action["x"] - army.ords[0]
+        y_count = action["y"] - army.ords[1]
+        process_count = abs(x_count) + abs(y_count)
+        process_list = []
+        move_time = army.calculate_move_time()
+        models.armies[army.id].hasaction = True
+        army = models.armies[army.id]
+
+        for process in xrange(process_count):
+            if not x_count == 0:
+                if x_count <0:
+                    process_list.append("a")
+                    x_count +=1
+
+                else:
+                    process_list.append("d")
+                    x_count = x_count -1
+
+            if not y_count == 0:
+                if y_count <0:
+                    process_list.append("w")
+                    y_count += 1
+                else:
+                    process_list.append("s")
+                    y_count = y_count - 1
+
+        for inst in process_list:
+            self.move_army_process(army, inst, move_time)
+        self.actionpool.removebyid(poolid)
+        self.actionpool.save()
+        models.armies[army.id].hasaction = False
+
+    def move_army_process(self, army, key, sleeptime):
+        time.sleep(sleeptime)
+        army.isshown = True
+        print str(army.ords)
+        if key == "w":
+            army.ords[1] = army.ords[1] - 1
+        if key == "s":
+            army.ords[1] += 1
+        if key == "a":
+            army.ords[0] = army.ords[0] - 1
+        if key == "d":
+            army.ords[0] += 1
+        models.armies[army.id] = army
+        parsed = parser.parse_map([], [], [army])
+        self.genericpool.replace(parsed["armies"][0])
+
+
+
     def action_trigger_chainer(self,pool):#ATC, her aksiyonun bir triggeri oldugundan emin olunmasini saglar.Her sunucu baslangicinda cagirilmasi gerekir
         for action_id in pool.pool:
-            if pool.pool[action_id]["type"] == "move_army":
-                if not pool.pool[action_id]["has_trigger"]:
-                    pass #move_army trigger
+            if not pool.pool[action_id]["type"] in ["move_army", "create_troop"]:
+                pool.remove_by_id(action_id)
+                pool.log.write("{} id li aksiyonun tipi herhangi bir ontanimli tipe uymadigi icin havuzdan eksiltildi".format(str(action_id)))
+                continue
+            if not pool.pool[action_id]["has_trigger"]:
+                pool.pool[action_id]["has_trigger"] = True
+                if pool.pool[action_id]["type"] == "move_army":
+                    Thread(target = self.move_army_trigger, args=(action_id, )).start()
 
-            if pool.pool[action_id]["type"] == "create_troop":
-                if not pool.pool[action_id]["has_trigger"]:
+                if pool.pool[action_id]["type"] == "create_troop":
                     pass #create_troop trigger
 
 def prepare_map():
@@ -327,6 +406,7 @@ def initialize():
         pool = infopool("playerpool "+ str(id))
         server.offline_earn(models.players[id])
         server.player_container.register(id, pool)
+    Thread(target = server.saver).start()
     server.bind(5)
     Thread(target=server.cmd).start()
 
