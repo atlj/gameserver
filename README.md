@@ -1,4 +1,7 @@
-# loginforgame
+# login için 
+
+
+
 
 
 Kullanacagin methodlar.
@@ -10,4 +13,6 @@ Kullanacagin methodlar.
     delUser(id or name)  #Db ye kayitli ogeyi siler
     init()     #Tablesleri olusturur.
 ```
+
+
 
