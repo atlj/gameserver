@@ -14,7 +14,7 @@ class Map(object):
     def create():
         x_ord = random.randrange(Map.x + 1)
         y_ord = random.randrange(Map.y + 1)
-        ords = (x_ord, y_ord)
+        ords = [x_ord, y_ord]
         
         if ords in Map.towns:
             Map.create()

@@ -24,7 +24,7 @@ class parser(object):
         for army in self_armies:
             total_size = 0
             for troop in army.troops:
-                total_size += army.size
+                total_size += troop.size
             package = {"datatype":"army", "total_size":total_size,"id":army.id, "name":army.name, "general_name":army.general_name,"x":army.ords[0], "y":army.ords[1], "troops":parser.parse_troops(army.troops) }
             parsed_armies.append(package)
 
@@ -48,7 +48,7 @@ class parser(object):
         for obj in armies:
             army = armies[obj]
             if army.isshown:
-                package = {"datatype":"place", "quickinfo":army.name, "marker":"A", "type":"army", "x":army.ords[0], "y":army.ords[1], "name":army.name, "general_name":army.general_name,"belonger_name":army.belonger_name, "belonger_id":army.belonger_id}
+                package = {"id":army.id, "datatype":"place", "quickinfo":[army.name], "marker":"A", "type":"army", "x":army.ords[0], "y":army.ords[1], "name":army.name, "general_name":army.general_name,"belonger_name":army.belonger_name, "belonger_id":army.belonger_id}
                 armylist.append(package)
 
         for obj in forts:

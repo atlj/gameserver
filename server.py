@@ -148,10 +148,11 @@ class GameServer(object):
                     data[0]["id"] = self.actionpool.getid()
                     data[0]["from"] = obj.id
                     data[0]["has_trigger"] = False
+                    data[0]["paid"] = False
                 except TypeError:
                     self.log.write("Gecersiz Action Tanimlama : {}".format(str(data[0])))
                     continue
-                self.actionpool.add(data[0])#devam
+                self.actionpool.add(data[0])
                 self.actionpool.save()
                 self.action_trigger_chainer(self.actionpool)
             if tag == "create_army":
@@ -173,10 +174,11 @@ class GameServer(object):
 
                 if odun >= ucret["Odun"] and kil >= ucret["Kil"] and demir >= ucret["Demir"]:
                     self.sender({"tag":"create_army_feedback", "data":[True]}, c)
-                    army_name = data[0].encode("utf-8")
+                    army_name = data[0].encode("utf-8")#TODO UCRET ALINMASINI SAGLA
                     general_name = data[1].encode("utf-8")
                     newarmy = models.Army(army_name, general_name, obj.id, obj.usr_name)
-                    newarmy.ords = obj.ords
+                    newarmy.ords[0] = obj.ords[0]
+                    newarmy.ords[1] = obj.ords[1]
                     models.armies[newarmy.id] = newarmy
                     models.players[obj.id].armies.append(newarmy.id) 
                     obj = models.players[obj.id]
@@ -208,7 +210,7 @@ class GameServer(object):
                     if not selfpool:
                         self.log.write("oyuncu havuzu containerdan yuklenemedi\noyuncu id'si >> "+ str(obj.id)+"\nhavuz idleri >> "+str(self.player_container))
                     #BURAYI SIL
-                    parsed = parser.parse_player(obj, models.armies)
+                    parsed = parser.parse_player(models.players[obj.id], models.armies)
                     selfpool.replace(parsed["materials"])
                     for army in parsed["armies"]:
                         selfpool.replace(army)
@@ -301,6 +303,86 @@ class GameServer(object):
             for data in parsed_datas[element]:
                 self.genericpool.add(data)
 
+    def create_troop_trigger(self, poolid):
+        action = self.actionpool[poolid]
+        try:
+            army = models.armies[action["army_id"]]
+        except KeyError:
+            self.actionpool.log.write("{} id li actionun isaret ettigi {} id li ordu bulunamadigi icin action havuzdan kaldirildi".format(str(poolid), str(action["army_id"])))
+            self.actionpool.remove_by_id(poolid)
+            return 0
+
+        if not action["troop_type"] in [0, 1, 2, 3]:
+            self.actionpool.log.write("{} id li actiondaki troop_type degeri eldeki hicbir veriyle uyusmadigindan dolayi havuzdan kaldirildi action: {}".format(str(poolid), str(action)))
+            self.actionpool.remove_by_id(poolid)
+            return 0
+        price_id = ["yaya_asker", "zirhli_asker", "atli_asker", "kusatma_makinesi"][action["troop_type"]]
+        price_id = models.prices["troop_price"][price_id]
+        if not action["paid"]:
+            payment = self.check_and_pay(action["from"],price_id, True )
+            if payment:
+                self.actionpool[poolid]["paid"] = True
+                action["paid"] = True
+
+            else:
+                self.log.write("{} id li actiond odeme basarisiz oldugundan dolayi action havuzdan temizlendi, player id:{}".format(str(poolid), str(action["from"])))
+                self.actionpool.remove_by_id(poolid)
+                return 0
+        times = models.sleep_times["create_troop"]
+        tp = action["troop_type"]
+        if tp == 0:
+            sleep_time = times["yaya_asker"]
+        if tp == 1:
+            sleep_time = times["zirhli_asker"]
+        if tp == 2:
+            sleep_time = times["atli_asker"]
+        if tp == 3:
+            sleep_time = times["kusatma_makinesi"]
+
+        if models.armies[action["army_id"]].isshown:
+            self.actionpool.log.write("{} id li ordu herhangi bir karargahta bulunmadigindan dolayi {} id li aksiyon havuzdan kaldirildi".format(str(action["army_id"]), str(poolid)))
+
+        if models.armies[action["army_id"]].hasaction:
+            self.actionpool.log.write("{} id li actionda bahsedilen {} id li ordu zaten bir aksiyon icinde oldugundan dolayi aksiyon havuzdan kaldirildi".format(str(poolid), str(action["army_id"])))
+            self.actionpool.remove_by_id(poolid)
+            return 0
+        models.armies[action["army_id"]].hasaction = True
+        self.create_troop_process(tp, action["army_id"], sleep_time)
+        self.actionpool.remove_by_id(poolid)
+        models.armies[action["army_id"]].hasaction = False
+
+
+    def create_troop_process(self, troop_type,army_id, sleep_time):
+        time.sleep(sleep_time)
+        if troop_type == 0:
+            troop = models.yaya_asker()
+        if troop_type == 1:
+            troop = models.zirhli_asker()
+        if troop_type == 2:
+            troop = models.atli_asker()
+        if troop_type == 3:
+            troop = models.kusatma_makinesi()
+        models.armies[army_id].troops.append(troop)
+        del troop
+
+    def check_and_pay(self, player_id, price_id, manual = False):
+        if not manual == False:
+            prices = price_id
+        else:
+            prices = models.prices[price_id]
+        liste = []
+        if not models.players[player_id].builds["MadenOcagi"].suan >=prices["Demir"] :
+            return False
+        if not models.players[player_id].builds["KilOcagi"].suan >= prices["Kil"]:
+            return False
+        if not models.players[player_id].builds["Oduncu"].suan >= prices["Odun"]:
+            return False
+
+        models.players[player_id].builds["MadenOcagi"].suan -= prices["Demir"]
+        models.players[player_id].builds["KilOcagi"].suan -= prices["Kil"]
+        models.players[player_id].builds["Oduncu"].suan -= prices["Odun"]
+        return True
+
 
 
     def move_army_trigger(self, poolid):
@@ -349,8 +431,12 @@ class GameServer(object):
                     y_count = y_count - 1
 
         for inst in process_list:
+            try:
+                self.actionpool[poolid]
+            except KeyError:
+                return 0
             self.move_army_process(army, inst, move_time)
-        self.actionpool.removebyid(poolid)
+        self.actionpool.remove_by_id(poolid)
         self.actionpool.save()
         models.armies[army.id].hasaction = False
 
@@ -367,7 +453,7 @@ class GameServer(object):
         if key == "d":
             army.ords[0] += 1
         models.armies[army.id] = army
-        parsed = parser.parse_map([], [], [army])
+        parsed = parser.parse_map([], [], {army.id: army})
         self.genericpool.replace(parsed["armies"][0])
 
 
@@ -384,7 +470,7 @@ class GameServer(object):
                     Thread(target = self.move_army_trigger, args=(action_id, )).start()
 
                 if pool.pool[action_id]["type"] == "create_troop":
-                    pass #create_troop trigger
+                    Thread(target = self.create_troop_trigger, args=(action_id, )).start()
 
 def prepare_map():
     return parser.parse_map(models.camps, models.forts,models.armies)

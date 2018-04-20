@@ -21,6 +21,8 @@ prices = {"troop_price":
     "kusatma_makinesi":{"Demir":100, "Odun":200, "Kil":100} },
     "army_price":{"Odun": 1, "Demir": 1, "Kil": 1}}
 
+sleep_times = {"create_troop":{"yaya_asker":2, "atli_asker":2, "kusatma_makinesi":2, "zirhli_asker":2}}
+
 def save():
     global idlist
     global camps
