@@ -4,10 +4,10 @@
 
 from peewee import SqliteDatabase, TextField, Model, BooleanField, DateTimeField
 import os, peewee, md5, datetime
-#from settings import DB_PATH
+from settings import DB_PATH
 
 
-DB = SqliteDatabase('/sdcard/test.db')
+DB = SqliteDatabase(DB_PATH)
 
 def init():
     DB.connect()
