@@ -311,11 +311,15 @@ class GameServer(object):
             self.actionpool.log.write("{} id li actionun isaret ettigi {} id li ordu bulunamadigi icin action havuzdan kaldirildi".format(str(poolid), str(action["army_id"])))
             self.actionpool.remove_by_id(poolid)
             return 0
-
         if not action["troop_type"] in [0, 1, 2, 3]:
             self.actionpool.log.write("{} id li actiondaki troop_type degeri eldeki hicbir veriyle uyusmadigindan dolayi havuzdan kaldirildi action: {}".format(str(poolid), str(action)))
             self.actionpool.remove_by_id(poolid)
             return 0
+        if not ["from"] <0:
+            if not action["army_id"] in models.players[action["from"]].armies:
+                self.actionpool.log.write("{} id li aksiyonu gonderen {} id liplayerin havuzunda {} id li ordu bulunmadigi icin aksiyon havuzdan kaldirildi".format(str(poolid), str(action["from"]), str(action["army_id"])))
+                self.actionpool.remove_by_id(poolid)
+                return 0
         price_id = ["yaya_asker", "zirhli_asker", "atli_asker", "kusatma_makinesi"][action["troop_type"]]
         price_id = models.prices["troop_price"][price_id]
         if not action["paid"]:
@@ -323,7 +327,6 @@ class GameServer(object):
             if payment:
                 self.actionpool[poolid]["paid"] = True
                 action["paid"] = True
-
             else:
                 self.log.write("{} id li actiond odeme basarisiz oldugundan dolayi action havuzdan temizlendi, player id:{}".format(str(poolid), str(action["from"])))
                 self.actionpool.remove_by_id(poolid)
@@ -366,7 +369,7 @@ class GameServer(object):
         del troop
 
     def check_and_pay(self, player_id, price_id, manual = False):
-        if not manual == False:
+        if manual:
             prices = price_id
         else:
             prices = models.prices[price_id]
@@ -399,6 +402,11 @@ class GameServer(object):
             self.actionpool.remove_by_id(poolid)
             self.actionpool.save()
             return 0
+        if not action["from"] <0:
+            if not action["army_id"] in models.players["from"].armies:
+                self.actionpool.log.write("{} id li actionda {} id li playera ait ordularin icerisinde {} id li ordu bulunmadigi icin action havudan kaldirildi".format(str(poolid), str(action["from"]), str(action["army_id"])))
+                self.actionpool.remove(poolid)
+                return 0
         if action["x"] <=0 or action["y"] <= 0:
             self.actionpool.remove_by_id(poolid)
             self.actionpool.save()
