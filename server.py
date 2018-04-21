@@ -405,7 +405,7 @@ class GameServer(object):
         if not action["from"] <0:
             if not action["army_id"] in models.players["from"].armies:
                 self.actionpool.log.write("{} id li actionda {} id li playera ait ordularin icerisinde {} id li ordu bulunmadigi icin action havudan kaldirildi".format(str(poolid), str(action["from"]), str(action["army_id"])))
-                self.actionpool.remove(poolid)
+                self.actionpool.remove_by_id(poolid)
                 return 0
         if action["x"] <=0 or action["y"] <= 0:
             self.actionpool.remove_by_id(poolid)
