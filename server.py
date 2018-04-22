@@ -71,6 +71,7 @@ class GameServer(object):
 
             if cmd == "armies":
                 for army in models.armies:
+                    print "-"*15
                     print "\n" + str(models.armies[army])
                 print "\n"
             

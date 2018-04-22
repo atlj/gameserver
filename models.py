@@ -64,7 +64,7 @@ class Asker(object):
         self.calculate_stats()
         
     def __str__(self):
-        return "{}".format("Isim: "+self.name+ " Sayi: "+ str(self.size)+ " Ozellikler: " + str(self.stats))
+        return "{}".format(self.name+ " Tipi Birlik, Sayi: "+ str(self.size))
     	
 
 class yaya_asker(Asker):
@@ -134,7 +134,10 @@ class Army(object):#dj army eheuheueheuehu
         save()
 
     def __str__(self):
-        return "Ordu Objesi\nId:{} Isim:{}\nGeneral Ismi:{} Sahip:{}".format(str(self.id), self.name, self.general_name, self.belonger_name)
+        trooptext = "\n"
+        for troop in self.troops:
+            trooptext += str(troop)+"\n"
+        return "Ordu Objesi\nId:{} Isim:{}\nGeneral Ismi:{} Sahip:{}\n\nBirlikler: {}".format(str(self.id), self.name, self.general_name, self.belonger_name, trooptext)
         
     def calculate_dps(self):
         self.dps =0 #damage per second = saniye basina verilen hasar
