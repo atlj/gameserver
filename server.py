@@ -449,6 +449,8 @@ class GameServer(object):
         models.armies[army.id].hasaction = False
 
     def move_army_process(self, army, key, sleeptime):
+        if sleeptime < 0:
+            sleeptime = 0
         time.sleep(sleeptime)
         army.isshown = True
         print str(army.ords)
