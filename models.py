@@ -137,7 +137,7 @@ class Army(object):#dj army eheuheueheuehu
         trooptext = "\n"
         for troop in self.troops:
             trooptext += str(troop)+"\n"
-        return "Ordu Objesi\nId:{} Isim:{}\nGeneral Ismi:{} Sahip:{}\n\nBirlikler: {}".format(str(self.id), self.name, self.general_name, self.belonger_name, trooptext)
+        return "Ordu Objesi\nId:{} Isim:{}\nGeneral Ismi:{} Sahip:{}\nKonum: {}\n\nBirlikler: {}".format(str(self.id), self.name, self.general_name, self.belonger_name,str(self.ords) , trooptext)
         
     def calculate_dps(self):
         self.dps =0 #damage per second = saniye basina verilen hasar

@@ -101,6 +101,7 @@ class GameServer(object):
             data = c.recv(1024**2)
             if not data:
                 print "kullanici Baglantiyi kesti: "+str(addr[0])
+                self.newthread()
                 return False
 
             if not "\\n" in data:
@@ -120,7 +121,6 @@ class GameServer(object):
             #self.sender({'tag':'feedback','data':[True]}, c)
             player = self.loginandregister(c, addr)
             if not player:
-                self.newthread()#asunucudan ayrilan kullanicinin yerine yeni bi dinleyici acmak icin
                 return 0#sunucudan ayrilan kullaniciyi atmak icin.
             self.listener(c, addr, player)#anadongu
 
@@ -140,8 +140,7 @@ class GameServer(object):
             data = self.recver(c, addr)
             self.log.write("gelen veri >> "+str(data))
             if data == False:
-                print str(addr[0])+" adresli kullanici sunucudan ayrildi"
-                break
+                return 0
             tag = data["tag"]
             data = data["data"]
             if tag == "action":
@@ -404,7 +403,7 @@ class GameServer(object):
             self.actionpool.save()
             return 0
         if not action["from"] <0:
-            if not action["army_id"] in models.players["from"].armies:
+            if not action["army_id"] in models.players[action["from"]].armies:
                 self.actionpool.log.write("{} id li actionda {} id li playera ait ordularin icerisinde {} id li ordu bulunmadigi icin action havudan kaldirildi".format(str(poolid), str(action["from"]), str(action["army_id"])))
                 self.actionpool.remove_by_id(poolid)
                 return 0
@@ -491,6 +490,8 @@ def initialize():
     server.player_container = containerpool("playercontainer")
     server.actionpool = infopool("actionpool")
     server.actionpool.load()
+    for action in server.actionpool.pool:
+        server.actionpool.pool[action]["has_trigger"] = False
     server.action_trigger_chainer(server.actionpool)
 
     for dic in map_elements:
