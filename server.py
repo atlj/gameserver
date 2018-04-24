@@ -173,6 +173,7 @@ class GameServer(object):
                     continue
 
                 if odun >= ucret["Odun"] and kil >= ucret["Kil"] and demir >= ucret["Demir"]:
+                    self.check_and_pay(obj.id, "army_price")
                     self.sender({"tag":"create_army_feedback", "data":[True]}, c)
                     army_name = data[0].encode("utf-8")#TODO UCRET ALINMASINI SAGLA
                     general_name = data[1].encode("utf-8")
