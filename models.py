@@ -15,7 +15,7 @@ players = {}
 villages = {}
 fort_names = []
 prices = {"troop_price":
-    {"yaya_asker":{"Demir":100, "Odun":200, "Kil":100}, 
+    {"yaya_asker":{"Demir":1, "Odun":2, "Kil":1}, 
     "zirhli_asker":{"Demir":100, "Odun":200, "Kil":100},
     "atli_asker":{"Demir":100, "Odun":200, "Kil":100}, 
     "kusatma_makinesi":{"Demir":100, "Odun":200, "Kil":100} },
