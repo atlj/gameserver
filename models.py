@@ -5,6 +5,7 @@ from mapping import Map
 import random
 import os
 import cPickle as pickle
+import shutil #dosya kopyalama
 
 cdir =  os.path.dirname(os.path.realpath(__file__))
 idlist = []
@@ -32,6 +33,9 @@ def save():
     global forts
     global fort_names
     savedata = {"camps":camps, "idlist":idlist, "armies":armies, "players":players, "villages":villages, "forts":forts, "fort_names":fort_names}
+    if os.path.exists(os.path.join(cdir, "serverdata")):
+        shutil.copyfile(os.path.join(cdir, "serverdata"), os.path.join(cdir, "serverdata_backup"))
+
     with open(os.path.join(cdir, "serverdata"), "wb") as dosya:
         pickle.dump(savedata, dosya)
 
@@ -44,8 +48,12 @@ def load():
     global forts
     global fort_names
     if os.path.exists(os.path.join(cdir, "serverdata")):
-        with open(os.path.join(cdir, "serverdata"), "rb") as dosya:
-            loaddata = pickle.load(dosya)
+        try:
+            with open(os.path.join(cdir, "serverdata"), "rb") as dosya:
+                loaddata = pickle.load(dosya)
+        except EOFError:
+            with open(os.path.join(cdir, "serverdata_backup"), "rb")as dosya:
+                loaddata = pickle.load(dosya)
         idlist = loaddata["idlist"]
         camps = loaddata["camps"]
         armies = loaddata["armies"]

@@ -20,6 +20,7 @@ class GameServer(object):
         self.run = (HOST, PORT)
         self.log = log("SERVER")
         self.socketqueue = []
+        self.clients = {}
         
     def bind(self, threadcount):
         self.sock.bind(self.run)
@@ -140,6 +141,7 @@ class GameServer(object):
             data = self.recver(c, addr)
             self.log.write("gelen veri >> "+str(data))
             if data == False:
+                self.clients.remove(obj.id)
                 return 0
             tag = data["tag"]
             data = data["data"]
@@ -271,6 +273,7 @@ class GameServer(object):
                 fb = self.sender({'tag':'feedback','data':[True]}, c)
                 if not fb:
                     return False
+                self.clients[player.id] = c
                 return player
             
             else:    #Login
@@ -279,6 +282,7 @@ class GameServer(object):
                 fb = self.sender({'tag':'feedback', 'data':[True]}, c)
                 if not fb:
                     return False
+                self.clients[player.id] = c
                 return player
 
         elif data['tag'] == 'register':
