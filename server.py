@@ -9,6 +9,7 @@ from log import log
 from parse import parser
 from pools import infopool, containerpool
 import generate
+# let g:syntastic_python_python_exec="python"
 
 __author__ = "easyly"
 
@@ -141,7 +142,7 @@ class GameServer(object):
             data = self.recver(c, addr)
             self.log.write("gelen veri >> "+str(data))
             if data == False:
-                self.clients.remove(obj.id)
+                del self.clients[obj.id]
                 return 0
             tag = data["tag"]
             data = data["data"]
