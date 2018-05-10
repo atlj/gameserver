@@ -158,6 +158,16 @@ class GameServer(object):
                 self.actionpool.add(data[0])
                 self.actionpool.save()
                 self.action_trigger_chainer(self.actionpool)
+
+            if tag =="notification_control":
+                if not self.pendingpool.pool[obj.id] == []:
+                    pending = []
+                    for ntf in self.pendingpool.pool[obj.id]:
+                        pending.append(ntf)
+                    self.sender({"tag":"notification", "data":pending}, c)
+                    self.pendingpool.pool[obj.id] = []
+                    self.pendingpool.save()
+
             if tag == "create_army":
                 pass_switch = False
                 builds = obj.builds
@@ -274,6 +284,8 @@ class GameServer(object):
                 fb = self.sender({'tag':'feedback','data':[True]}, c)
                 if not fb:
                     return False
+                self.pendingpool.pool[player.id]=[]
+                self.pendingpool.save()
                 self.clients[player.id] = c
                 return player
             
@@ -283,6 +295,9 @@ class GameServer(object):
                 fb = self.sender({'tag':'feedback', 'data':[True]}, c)
                 if not fb:
                     return False
+                if not player.id in self.pendingpool.pool:
+                    self.pendingpool.pool[player.id]=[]
+                    self.pendingpool.save()
                 self.clients[player.id] = c
                 return player
 
@@ -392,7 +407,14 @@ class GameServer(object):
         models.players[player_id].builds["Oduncu"].suan -= prices["Odun"]
         return True
 
-
+    def notify(self, id, header, desc):
+        pos = models.players[id].ntfpos
+        models.players[id].ntfpos += 1
+        if not id in self.clients:
+            package={"header":header, "desc":desc, "pos":pos}
+            self.pendingpool[id].append(package)
+        else:
+            self.sender({"tag":"notification", "data":[{"header":header, "desc":desc, "pos":pos}]}, self.clients[id])
 
     def move_army_trigger(self, poolid):
         action = self.actionpool[poolid]
@@ -498,10 +520,11 @@ def initialize():
     server.player_container = containerpool("playercontainer")
     server.actionpool = infopool("actionpool")
     server.actionpool.load()
+    server.pendingpool = infopool("pending")
+    server.pendingpool.load()
     for action in server.actionpool.pool:
         server.actionpool.pool[action]["has_trigger"] = False
     server.action_trigger_chainer(server.actionpool)
-
     for dic in map_elements:
         for element in map_elements[dic]:
             server.genericpool.add(element)
