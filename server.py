@@ -330,7 +330,7 @@ class GameServer(object):
             self.actionpool.log.write("{} id li actiondaki troop_type degeri eldeki hicbir veriyle uyusmadigindan dolayi havuzdan kaldirildi action: {}".format(str(poolid), str(action)))
             self.actionpool.remove_by_id(poolid)
             return 0
-        if not ["from"] <0:
+        if not action["from"] <0:
             if not action["army_id"] in models.players[action["from"]].armies:
                 self.actionpool.log.write("{} id li aksiyonu gonderen {} id liplayerin havuzunda {} id li ordu bulunmadigi icin aksiyon havuzdan kaldirildi".format(str(poolid), str(action["from"]), str(action["army_id"])))
                 self.actionpool.remove_by_id(poolid)
