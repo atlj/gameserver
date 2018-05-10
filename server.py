@@ -170,12 +170,6 @@ class GameServer(object):
 
             if tag == "create_army":
                 pass_switch = False
-                builds = obj.builds
-                demir = builds["MadenOcagi"].suan
-                kil = builds["KilOcagi"].suan
-                odun = builds["Oduncu"].suan
-                ucret = models.prices["army_price"]
-                pass_switch = False
                 for army in models.armies:
                     if army in obj.armies:
                         if models.armies[army].name == data[0]:
@@ -185,10 +179,9 @@ class GameServer(object):
                 if pass_switch:
                     continue
 
-                if odun >= ucret["Odun"] and kil >= ucret["Kil"] and demir >= ucret["Demir"]:
-                    self.check_and_pay(obj.id, "army_price")
+                if self.check_and_pay(obj.id, "army_price"):
                     self.sender({"tag":"create_army_feedback", "data":[True]}, c)
-                    army_name = data[0].encode("utf-8")#TODO UCRET ALINMASINI SAGLA
+                    army_name = data[0].encode("utf-8")
                     general_name = data[1].encode("utf-8")
                     newarmy = models.Army(army_name, general_name, obj.id, obj.usr_name)
                     newarmy.ords[0] = obj.ords[0]
@@ -270,7 +263,7 @@ class GameServer(object):
             db = DBConnector(usr_name)
             db.add(usr_name)
             check = db.login(usr_name, usr_pass)
-            
+
             if check == False:
                 fb = self.sender({'tag':'feedback','data':[False]}, c)
                 if not fb:
@@ -288,7 +281,7 @@ class GameServer(object):
                 self.pendingpool.save()
                 self.clients[player.id] = c
                 return player
-            
+
             else:    #Login
                 player = db.login(usr_name, usr_pass)
                 player = models.players[player.id]
@@ -330,6 +323,7 @@ class GameServer(object):
             army = models.armies[action["army_id"]]
         except KeyError:
             self.actionpool.log.write("{} id li actionun isaret ettigi {} id li ordu bulunamadigi icin action havuzdan kaldirildi".format(str(poolid), str(action["army_id"])))
+            self.notify(action["from"], "Birlik Olusturulamadi", "Belirtilen ID Degerli Bir Ordunuz Olmadigindan Dolayi Birlik Olusturulamadi.")
             self.actionpool.remove_by_id(poolid)
             return 0
         if not action["troop_type"] in [0, 1, 2, 3]:
@@ -351,6 +345,7 @@ class GameServer(object):
             else:
                 self.log.write("{} id li actiond odeme basarisiz oldugundan dolayi action havuzdan temizlendi, player id:{}".format(str(poolid), str(action["from"])))
                 self.actionpool.remove_by_id(poolid)
+                self.notify(action["from"], "Birlik Olusturulamadi", "Yeterli Materyallere Sahip Olmadiginizdan Dolayi Birlik Olusturulamadi.")
                 return 0
         times = models.sleep_times["create_troop"]
         tp = action["troop_type"]
@@ -365,14 +360,17 @@ class GameServer(object):
 
         if models.armies[action["army_id"]].isshown:
             self.actionpool.log.write("{} id li ordu herhangi bir karargahta bulunmadigindan dolayi {} id li aksiyon havuzdan kaldirildi".format(str(action["army_id"]), str(poolid)))
-
+            self.notify(action["from"], "Birlik Olusturulamadi", "Ordunuz Herhangi Bir Karargahta Bulunmadigindan Dolayi Birlik Olusturulamadi.")
+            return 0
         if models.armies[action["army_id"]].hasaction:
             self.actionpool.log.write("{} id li actionda bahsedilen {} id li ordu zaten bir aksiyon icinde oldugundan dolayi aksiyon havuzdan kaldirildi".format(str(poolid), str(action["army_id"])))
+            self.notify(action["from"], "Birlik Olusturulamadi", "Ordunuz Zaten Bir Aksiyon Icerisinde Oldugundan Birlik Olusturulamadi")
             self.actionpool.remove_by_id(poolid)
             return 0
         models.armies[action["army_id"]].hasaction = True
         self.create_troop_process(tp, action["army_id"], sleep_time)
         self.actionpool.remove_by_id(poolid)
+        self.notify(action["from"], "Birlik Basariyla Olusturuldu", "Talep Ettiginiz Birliklerin Olusturulmasi Basariyla Gerceklesti")
         models.armies[action["army_id"]].hasaction = False
 
 
@@ -427,6 +425,7 @@ class GameServer(object):
             return 0
         if army.hasaction:
             self.actionpool.log.write("{} idli ordu zaten bir aksiyon icerisinde oldugundan dolayi {} id li aksiyon havuzdan eksiltildi".format(str(action["army_id"]), str(action["id"])))
+            self.notify(action["from"], "Ordu Hareket Ettirilemedi", "Ordunuz Zaten Bir Aksiyon Icerisinde  Oldugundan Dolayi Hareket Ettirilemedi")
             self.actionpool.remove_by_id(poolid)
             self.actionpool.save()
             return 0
@@ -474,6 +473,7 @@ class GameServer(object):
             self.move_army_process(army, inst, move_time)
         self.actionpool.remove_by_id(poolid)
         self.actionpool.save()
+        self.notify(action["from"], "Ordu Basariyla Hareket Ettirildi", "Talep Ettiginiz Ordunuzu Hareket Ettirme Islemi Basariyla Gerceklesti")
         models.armies[army.id].hasaction = False
 
     def move_army_process(self, army, key, sleeptime):
