@@ -325,6 +325,9 @@ class Player(object):
         global players
         global forts
         self.name = "noname"#ilk olusturulusta
+        self.faction_id = -1 #ilk Olusturulsta
+        self.wins = 0#ilk olust.
+        self.loses = 0#ilk olust.
         self.getid()
         self.ntfpos = 0
         self.armies = [] #ordularin id tagleri tutulacak

@@ -409,10 +409,10 @@ class GameServer(object):
         pos = models.players[id].ntfpos
         models.players[id].ntfpos += 1
         if not id in self.clients:
-            package={"header":header, "desc":desc, "pos":pos}
+            package={"header":header, "desc":desc, "pos":pos, "type":"ntf"}
             self.pendingpool[id].append(package)
         else:
-            self.sender({"tag":"notification", "data":[{"header":header, "desc":desc, "pos":pos}]}, self.clients[id])
+            self.sender({"tag":"notification", "data":[{"header":header, "desc":desc, "pos":pos, "type":"ntf"}]}, self.clients[id])
 
     def move_army_trigger(self, poolid):
         action = self.actionpool[poolid]
@@ -529,10 +529,14 @@ def initialize():
         for element in map_elements[dic]:
             server.genericpool.add(element)
     server.genericpool.add({"id":-1, "datatype":"prices", "data":models.prices})
+    parsed_players = parser.parse_players(models.players)
+    for player in parsed_players:
+        server.genericpool.add(player)
     for id  in models.players:
         pool = infopool("playerpool "+ str(id))
         server.offline_earn(models.players[id])
         server.player_container.register(id, pool)
+        
     Thread(target = server.saver).start()
     server.bind(5)
     Thread(target=server.cmd).start()

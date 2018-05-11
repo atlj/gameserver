@@ -35,7 +35,16 @@ class parser(object):
         materials["id"] = player.id
         materials["datatype"] = "materials"
         return {"armies":parsed_armies, "materials":materials}
-        
+
+    @staticmethod
+    def parse_players(players):
+        packages = []
+        for id in players:
+            player = players[id]
+            package= {"id":player.id, "datatype":"player", "name": player.usr_name, "faction_id":player.faction_id, "win":player.wins, "lose":player.loses}
+            packages.append(package)
+        return packages
+
     @staticmethod
     def parse_map(camps=[], forts =[], armies=[], villages= []):#villages tbe
         camplist = []
