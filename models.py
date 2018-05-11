@@ -308,8 +308,7 @@ class Merkez(object):
     def level_up(self):
         self.can += self.seviye * 50
         self.seviye += 1
-        self.insa_hiz += 1
-    
+        self.insa_hiz += 1 
     def reset(self):
         self.seviye = 1
         self.can = 1000
@@ -318,13 +317,21 @@ class Merkez(object):
     def __str__(self):
         return 'Merkez: ' + str(self.seviye)
         
+class Fort(object):
+    def __init__(self, name):
+        self.name = name
+        self.usr_name = None
+        self.id = None
+        self.belonger_id = None
+        self.ords = None
+
 
 class Player(object):
     player_list = []
     def __init__(self,usr_name):
         global players
         global forts
-        self.name = "noname"#ilk olusturulusta
+        self.name = "noname"#ilk olusturulusta, fortname, user name nick olarak gecicek bu veriyi username olarak kullanma 
         self.faction_id = -1 #ilk Olusturulsta
         self.wins = 0#ilk olust.
         self.loses = 0#ilk olust.
@@ -344,18 +351,27 @@ class Player(object):
 
     def create_fort(self):
         self.ords = Map.create()
-        forts[self.id] = self
+        newid = self.getid(True)
+        newfort = Fort(self.name)
+        newfort.id = newid
+        newfort.usr_name = self.usr_name
+        newfort.ords = self.ords
+        newfort.belonger_id = self.id
+        forts[newid] = newfort
 
-    def getid(self):
+    def getid(self, returnmode= False):
         global idlist
         while 1:
-            self.id = random.randint(0, 10**6)
-            if self.id in idlist:
+            id = random.randint(0, 10**6)
+            if id in idlist:
                 continue
 
-            idlist.append(self.id)
+            idlist.append(id)
             break
-        
+        if not returnmode:
+            self.id = id
+        else:
+            return id
     def save(self):
         return cPickle.dumps(self)
         

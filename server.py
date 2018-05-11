@@ -198,7 +198,6 @@ class GameServer(object):
                     cr = self.register(c, addr)
                     obj.name = cr
                     obj.create_fort()
-                    models.forts[obj.id] = obj
                     models.players[obj.id] = obj
                     models.save()
                 else:

@@ -62,7 +62,7 @@ class parser(object):
 
         for obj in forts:
             fort = forts[obj]
-            package = {"datatype":"place", "quickinfo":[fort.name], "usr_name":fort.usr_name, "marker":"P", "type":"fort", "x":fort.ords[0], "y":fort.ords[1], "name":fort.name, "id":fort.id, }
+            package = {"datatype":"place", "quickinfo":[fort.name], "usr_name":fort.usr_name, "marker":"P", "type":"fort", "x":fort.ords[0], "y":fort.ords[1], "name":fort.name, "id":fort.id,"belonger_id":fort.belonger_id }
             fortlist.append(package)
         return {"forts":fortlist,
                 "camps":camplist,
