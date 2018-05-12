@@ -32,7 +32,7 @@ class GameServer(object):
 
     def sender(self,context,c):
         try:
-            data = json.dumps(context)
+            data = json.dumps(context)+"\n"
             c.send(data)
             return True
 
@@ -106,8 +106,10 @@ class GameServer(object):
                 self.newthread()
                 return False
 
-            if not "\\n" in data:
-                parsed = data.split("\n")
+            if  "\\n" in data:
+                data = data.replace("\\n", "")
+            parsed = data.split("\n")
+
 
             for element in parsed:
                 self.socketqueue.append(element)
