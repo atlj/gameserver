@@ -112,6 +112,32 @@ class infopool(object):
                 
     def __str__(self):
         return str(self.pool)
+
+class syncpool(infopool):
+    def __init__(self, name):
+        infopool.__init__(self, name)
+
+    def add(self, data):
+        id = self.getid()
+        self.pool[id] = data
+        return {"replace":[{id:data}], "delete":[]}
+
+    def replace(self, data):
+        old_id = self.findbyid(data)
+        if old_id:
+            del self.pool[old_id]
+        return self.add(data)
+
+
+    def remove_by_id(self, id):
+        try:
+            del self.pool[id]
+            self.info_ids.remove(id)
+            return {"replace":[], "delete":[id]}
+        except KeyError:
+            self.log.write("Havuzda {} Numarali Id Bulunamadigi İcin remove_by_id gerceklestirilemedi".format(str(id)))
+
+
 class containerpool(infopool):
     def __init__(self, name):
         infopool.__init__(self, name)

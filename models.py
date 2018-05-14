@@ -358,6 +358,7 @@ class Player(object):
         newfort.ords = self.ords
         newfort.belonger_id = self.id
         forts[newid] = newfort
+        return newid
 
     def getid(self, returnmode= False):
         global idlist

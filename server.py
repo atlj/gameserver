@@ -7,7 +7,7 @@ from settings import *
 import os, socket, json , time
 from log import log
 from parse import parser
-from pools import infopool, containerpool
+from pools import infopool,syncpool, containerpool
 import generate
 # let g:syntastic_python_python_exec="python"
 
@@ -191,6 +191,9 @@ class GameServer(object):
                     models.armies[newarmy.id] = newarmy
                     models.players[obj.id].armies.append(newarmy.id) 
                     obj = models.players[obj.id]
+                    package = parser.parse_army(models.armies[newarmy.id])
+                    tosend = self.player_container.bring(obj.id).add(package)
+                    self.update_player(obj.id, tosend)
                     models.save()
                 else:
                     self.sender({"tag":"create_army_feedback","data":[False, "err_materials"]}, c)
@@ -199,7 +202,10 @@ class GameServer(object):
                     self.sender({"tag":"feedback", "data":[False]}, c)
                     cr = self.register(c, addr)
                     obj.name = cr
-                    obj.create_fort()
+                    fort_id = obj.create_fort()
+                    parsed = parser.parse_fort(models.forts[fort_id])
+                    tosend = self.genericpool.add(parsed)
+                    self.update(tosend)
                     models.players[obj.id] = obj
                     models.save()
                 else:
@@ -280,7 +286,13 @@ class GameServer(object):
                     return False
                 self.pendingpool.pool[player.id]=[]
                 self.pendingpool.save()
+                self.notify(player.id, "Hosgeldiniz", "Sunucumuza Hosgeldiniz Gelistirme Asamasi Halinde Olan Oyunumuza Tester Olarak Katildiginiz Icin Tesekkur Ederiz.. Iyi Eglenceler")
+                parsed = parser.parse_single_player(player)
+                tosend = self.genericpool.add(parsed)
+                self.update(tosend)
                 self.clients[player.id] = c
+                selfpool = syncpool("playerpool "+ str(player.id))
+                self.player_container.register(player.id, selfpool)
                 return player
 
             else:    #Login
@@ -371,9 +383,12 @@ class GameServer(object):
         models.armies[action["army_id"]].hasaction = True
         self.create_troop_process(tp, action["army_id"], sleep_time)
         self.actionpool.remove_by_id(poolid)
+
         self.notify(action["from"], "Birlik Basariyla Olusturuldu", "Talep Ettiginiz Birliklerin Olusturulmasi Basariyla Gerceklesti")
         models.armies[action["army_id"]].hasaction = False
-
+        package = parser.parse_army(models.armies[action["army_id"]])
+        tosend = self.player_container.bring(action["from"]).replace(package)
+        self.update_player(action["from"], tosend)
 
     def create_troop_process(self, troop_type,army_id, sleep_time):
         time.sleep(sleep_time)
@@ -477,12 +492,20 @@ class GameServer(object):
         self.notify(action["from"], "Ordu Basariyla Hareket Ettirildi", "Talep Ettiginiz Ordunuzu Hareket Ettirme Islemi Basariyla Gerceklesti")
         models.armies[army.id].hasaction = False
 
+    def update(self, data):
+        for client in self.clients:
+            socket_object = self.clients[client]
+            self.sender({"tag":"update", "data":[{"generic":data}]}, socket_object)
+
+    def update_player(self, player_id, data):
+        if player_id in self.clients:
+            self.sender({"tag":"update", "data":[{"player":data}]}, self.clients[player_id])
+
     def move_army_process(self, army, key, sleeptime):
-        if sleeptime < 0:
-            sleeptime = 0
+        if sleeptime < 1:
+            sleeptime = 1
         time.sleep(sleeptime)
         army.isshown = True
-        print str(army.ords)
         if key == "w":
             army.ords[1] = army.ords[1] - 1
         if key == "s":
@@ -492,8 +515,10 @@ class GameServer(object):
         if key == "d":
             army.ords[0] += 1
         models.armies[army.id] = army
-        parsed = parser.parse_map([], [], {army.id: army})
-        self.genericpool.replace(parsed["armies"][0])
+        parsed = parser.parse_army_map(army)
+        tosend = self.genericpool.replace(parsed)
+        self.update(tosend)
+
 
 
 
@@ -513,11 +538,11 @@ class GameServer(object):
 
 def prepare_map():
     return parser.parse_map(models.camps, models.forts,models.armies)
-                       
+
 def initialize():
     server = GameServer()
     map_elements = prepare_map()
-    server.genericpool = infopool("genericpool")
+    server.genericpool = syncpool("genericpool")
     server.player_container = containerpool("playercontainer")
     server.actionpool = infopool("actionpool")
     server.actionpool.load()
@@ -534,7 +559,7 @@ def initialize():
     for player in parsed_players:
         server.genericpool.add(player)
     for id  in models.players:
-        pool = infopool("playerpool "+ str(id))
+        pool = syncpool("playerpool "+ str(id))
         server.offline_earn(models.players[id])
         server.player_container.register(id, pool)
         
