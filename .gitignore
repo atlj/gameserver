@@ -1,0 +1,12 @@
+.vscode/settings.json
+generate.pyc
+database.pyc
+log.pyc
+mapping.pyc
+models.pyc
+parse.pyc
+pools.pyc
+serverdata
+serverdata_backup
+settings.pyc
+timer.pyc
